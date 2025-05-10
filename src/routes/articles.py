@@ -99,6 +99,27 @@ def partial_update_article(id: int, article_data: ArticleUpdate) -> Article:
             .execute()
         )
     return updated_article.data[0]
+
+@articles_router.get("/filter/")
+def filter_articles(article_date: date | None = None, article_tag: str | None = None):
+    query = supabase.table("articles").select("*")
+
+    if article_date:
+        query = query.eq("published_at", article_date.isoformat())
+
+    if article_tag:
+        query = query.contains("tags", [article_tag])
+
+    articles = query.execute()
+
+    if not articles.data:
+        raise HTTPException(
+            status_code=404,
+            detail="No se encontraron publicaciones con los criterios proporcionados"
+        )
+
+    return articles.data
+
     
 def search_article(id: int) -> dict | None:
     """
